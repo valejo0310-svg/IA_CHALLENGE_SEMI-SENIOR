@@ -25,7 +25,7 @@ The app helps students organize and prioritize academic tasks based on their sub
 * Vite
 * jsPDF
 * Ollama
-* TinyLlama
+* llama3.2
 
 # Install the Project
 
