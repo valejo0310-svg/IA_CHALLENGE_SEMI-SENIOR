@@ -1,19 +1,42 @@
 # AI Task Assistant
 
-AI-powered web application built with JavaScript, Vite, and a local AI model using Ollama + TinyLlama.
+AI-powered web application built with JavaScript, Vite, and a local AI model using Ollama + llama3.2.
 
 The app helps students organize and prioritize academic tasks based on their subject, context, and preferred response tone.
 
 ---
 
+# Project Name
+
+**AI Task Assistant**
+
+---
+
+# Selected Industry
+
+**Education Technology (EdTech)**
+
+---
+
+# Identified Problem
+
+Students often have difficulties organizing and prioritizing academic tasks efficiently.
+
+---
+
+# Proposed Solution
+
+This application uses artificial intelligence to help students manage academic tasks, generate contextual responses, and improve productivity through a fully local AI system.
+
+---
+
 # Features
 
-* Task prioritization with AI
-* Real-time streaming responses
-* Copy generated text
-* Export results as PDF
-* Responsive modern UI
-* 100% local AI execution
+* AI task prioritization
+* Real-time responses
+* PDF export
+* Responsive UI
+* Local AI execution
 
 ---
 
@@ -27,9 +50,11 @@ The app helps students organize and prioritize academic tasks based on their sub
 * Ollama
 * llama3.2
 
-# Install the Project
+---
 
-## 1. Install dependencies
+# Installation
+
+## Install dependencies
 
 ```bash
 npm install
@@ -37,77 +62,42 @@ npm install
 
 ---
 
-# Install Local AI (Ollama)
+# Install Ollama
 
-## 1. Download Ollama
+## Download Ollama
 
-[Ollama](https://ollama.com/download)
+[Ollama Download](https://ollama.com/download)
 
----
-
-## 2. Install llama3.2
+## Install llama3.2
 
 ```bash
 ollama pull llama3.2
 ```
 
----
-
-## 3. Run Ollama
+## Run Ollama
 
 ```bash
 ollama serve
 ```
 
-The local AI server will run on:
-
-```bash
-http://localhost:11434
-```
-
 ---
 
-# Run the Project
+# Execution Instructions
 
-Start the development server:
+Run the project:
 
 ```bash
 npm run dev
 ```
 
-Open the local Vite URL in your browser.
+Then open the local Vite URL in your browser.
 
 ---
 
 # Basic Logic
 
-1. The user enters:
-
-   * Subject
-   * Task context
-   * Response tone
-
-2. JavaScript creates a custom AI prompt.
-
-3. The app sends the prompt to Ollama using:
-
-```js
-fetch("http://localhost:11434/api/generate")
-```
-
-4. llama3.2 generates a streamed response in real time.
-
-5. The result is displayed live and can be:
-
-   * Copied
-   * Exported as PDF
-
----
-
-# Main Dependencies
-
-* **Vite** → Development server
-* **jsPDF** → PDF export
-* **Ollama** → Local AI runtime
-* **llama3.2** → AI model
-
+1. User enters academic information
+2. The app generates an AI prompt
+3. Ollama processes the request
+4. The response is displayed in real time
+5. Results can be copied or exported as PDF
