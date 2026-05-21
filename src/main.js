@@ -1,153 +1,312 @@
+// Imports the application's CSS styles
 import "./style.css";
+
+// Imports the jsPDF library to generate PDF files
 import jsPDF from "jspdf";
 
-// ─── HTML de la app ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// MAIN APPLICATION HTML
+// ─────────────────────────────────────────────────────────────
 
+// Selects the main container from the HTML
 const app = document.querySelector("#app");
 
+// Dynamically injects the full application interface
 app.innerHTML = `
   <main class="container">
+
+    <!-- Main title -->
     <h1>AI Task Assistant</h1>
 
-    <input id="subject" type="text" placeholder="Materia..." />
+    <!-- Input field for the subject -->
+    <input 
+      id="subject" 
+      type="text" 
+      placeholder="Subject..." 
+    />
 
-    <textarea id="input" placeholder="Ejemplo: Necesito presentar tres tarabajos pero no se por cual emepezar..."></textarea>
+    <!-- Text area for the user context -->
+    <textarea 
+      id="input" 
+      placeholder="Example: I need to submit three assignments but I don't know where to start..."
+    ></textarea>
 
+    <!-- Tone selector -->
     <select id="tone">
+
+      <!-- Formal tone -->
       <option value="formal">Formal</option>
-      <option value="amigable">Amigable</option>
-      <option value="profesional">Profesional</option>
+
+      <!-- Friendly tone -->
+      <option value="friendly">Friendly</option>
+
+      <!-- Professional tone -->
+      <option value="professional">Professional</option>
+
     </select>
 
     <br />
 
-    <button id="generate">Generar con IA</button>
-    <button id="copyBtn">Copiar</button>
-    <button id="pdfBtn">Exportar PDF</button>
+    <!-- Button to generate AI response -->
+    <button id="generate">Generate with AI</button>
+
+    <!-- Button to copy generated text -->
+    <button id="copyBtn">Copy</button>
+
+    <!-- Button to export result as PDF -->
+    <button id="pdfBtn">Export PDF</button>
+
     <br>
-   <br> 
-    <section class="result" id="result">La respuesta aparecerá aquí...</section>
+    <br>
+
+    <!-- Section where the AI response will appear -->
+    <section class="result" id="result">
+      The response will appear here...
+    </section>
 
   </main>
 `;
 
-// ─── Referencias a los elementos ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// DOM ELEMENT REFERENCES
+// ─────────────────────────────────────────────────────────────
 
-const button     = document.querySelector("#generate");
-const result     = document.querySelector("#result");
-const copyBtn    = document.querySelector("#copyBtn");
-const pdfBtn     = document.querySelector("#pdfBtn");
+// Main generate button
+const button = document.querySelector("#generate");
 
+// Result container
+const result = document.querySelector("#result");
 
+// Copy button
+const copyBtn = document.querySelector("#copyBtn");
 
-// ─── Generar correo con streaming ─────────────────────────────────────────────
+// PDF export button
+const pdfBtn = document.querySelector("#pdfBtn");
 
+// ─────────────────────────────────────────────────────────────
+// GENERATE AI RESPONSE WITH STREAMING
+// ─────────────────────────────────────────────────────────────
+
+// Listens for clicks on the generate button
 button.addEventListener("click", async () => {
-  const subject = document.querySelector("#subject").value;
-  const input   = document.querySelector("#input").value;
-  const tone    = document.querySelector("#tone").value;
 
+  // Gets the subject value
+  const subject = document.querySelector("#subject").value;
+
+  // Gets the user's input/context
+  const input = document.querySelector("#input").value;
+
+  // Gets the selected tone
+  const tone = document.querySelector("#tone").value;
+
+  // Validates that required fields are filled
   if (!subject.trim() || !input.trim()) {
-    result.textContent = "Debes completar la materia y el contexto.";
+
+    // Displays validation message
+    result.textContent =
+      "You must complete both the subject and context.";
+
+    // Stops execution
     return;
   }
 
+  // Clears previous result
   result.textContent = "";
+
+  // Disables the button while generating
   button.disabled = true;
 
+  // Prompt sent to the AI model
   const prompt = `
-Actúa como un asistente especializado en organización y priorización de tareas académicas para estudiantes jóvenes.
+Act as an assistant specialized in organizing and prioritizing academic tasks for young students.
 
-Tu objetivo es:
-- Analizar la información proporcionada.
-- Interpretar actividades, tareas y responsabilidades.
-- Organizar las tareas según prioridad
-- Ayudar a planificar el tiempo de forma clara y sencilla.
+Your objective is:
+- Analyze the provided information.
+- Interpret activities, tasks, and responsibilities.
+- Organize tasks by priority.
+- Help plan time clearly and simply.
 
-Formato de respuesta:
-- Nombre de la tarea
-- Motivo de la prioridad
-- Tiempo estimado
-- Recomendación breve
+Response format:
+- Task name
+- Priority reason
+- Estimated time
+- Short recommendation
 
-Sé organizado, breve y fácil de entender. ten en cuenta el ${tone} escogido basado en:
+Be organized, concise, and easy to understand.
 
-Asunto: ${subject}
-Contexto: ${input}
+Take into account the selected ${tone} tone based on:
+
+Subject: ${subject}
+Context: ${input}
 `;
 
   try {
-    const response = await fetch("http://localhost:11434/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "llama3.2",
-        prompt,
-        stream: true, 
-      }),
-    });
 
-    const reader  = response.body.getReader();
+    // Sends POST request to Ollama
+    const response = await fetch(
+      "http://localhost:11434/api/generate",
+      {
+        method: "POST",
+
+        // JSON content type
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        // Data sent to the AI model
+        body: JSON.stringify({
+
+          // AI model name
+          model: "llama3.2",
+
+          // Generated prompt
+          prompt,
+
+          // Enables real-time streaming
+          stream: true,
+        }),
+      }
+    );
+
+    // Creates a stream reader
+    const reader = response.body.getReader();
+
+    // Text decoder
     const decoder = new TextDecoder();
-    let fullText  = "";
 
-    // lee los trozos que llegan uno a uno mientras la IA escribe
+    // Stores the full generated response
+    let fullText = "";
+
+    // Infinite loop to continuously read stream chunks
     while (true) {
+
+      // Reads a chunk from the stream
       const { done, value } = await reader.read();
+
+      // Stops loop when stream ends
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split("\n").filter(line => line.trim() !== "");
+      // Decodes binary chunk into text
+      const chunk = decoder.decode(value, {
+        stream: true,
+      });
 
+      // Splits lines and removes empty ones
+      const lines = chunk
+        .split("\n")
+        .filter(line => line.trim() !== "");
+
+      // Processes each line
       for (const line of lines) {
+
         try {
+
+          // Parses JSON line into object
           const parsed = JSON.parse(line);
+
+          // If response text exists
           if (parsed.response) {
+
+            // Appends generated text
             fullText += parsed.response;
-            result.textContent = fullText; // actualiza en pantalla con cada trozo
+
+            // Updates UI in real time
+            result.textContent = fullText;
           }
+
         } catch {
-          // línea incompleta, se ignora
+
+          // Ignores incomplete stream lines
         }
       }
     }
+
   } catch (error) {
-    result.textContent = "Error conectando con Ollama.";
+
+    // Displays connection error
+    result.textContent =
+      "Error connecting to Ollama.";
+
+    // Logs error in console
     console.error(error);
+
   } finally {
+
+    // Re-enables button when process finishes
     button.disabled = false;
   }
 });
 
-// ─── Copiar al portapapeles ───────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// COPY RESULT TO CLIPBOARD
+// ─────────────────────────────────────────────────────────────
 
+// Handles copy button click
 copyBtn.addEventListener("click", () => {
+
+  // Copies generated text to clipboard
   navigator.clipboard.writeText(result.textContent);
-  alert("copiado");
+
+  // Confirmation message
+  alert("Copied");
 });
 
-// ─── Exportar PDF ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// EXPORT RESULT AS PDF
+// ─────────────────────────────────────────────────────────────
 
+// Handles PDF export button click
 pdfBtn.addEventListener("click", () => {
-  const doc       = new jsPDF();
-  const margin    = 20;
-  const maxWidth  = doc.internal.pageSize.getWidth() - margin * 2;
-  const pageH     = doc.internal.pageSize.getHeight();
-  const lineH     = 7;
 
+  // Creates a new PDF document
+  const doc = new jsPDF();
+
+  // Document margins
+  const margin = 20;
+
+  // Calculates maximum available width
+  const maxWidth =
+    doc.internal.pageSize.getWidth() - margin * 2;
+
+  // Gets page height
+  const pageH =
+    doc.internal.pageSize.getHeight();
+
+  // Line height
+  const lineH = 7;
+
+  // Sets font size
   doc.setFontSize(12);
-  const lines = doc.splitTextToSize(result.textContent, maxWidth);
+
+  // Automatically wraps text
+  const lines = doc.splitTextToSize(
+    result.textContent,
+    maxWidth
+  );
+
+  // Initial vertical position
   let y = margin;
 
+  // Iterates through each line
   for (const line of lines) {
+
+    // Creates a new page if needed
     if (y + lineH > pageH - margin) {
+
+      // Adds a new page
       doc.addPage();
+
+      // Resets vertical position
       y = margin;
     }
+
+    // Writes line into the PDF
     doc.text(line, margin, y);
+
+    // Moves to next line
     y += lineH;
   }
 
-  doc.save("Organizador.pdf");
+  // Downloads the PDF file
+  doc.save("Organizer.pdf");
 });
-
